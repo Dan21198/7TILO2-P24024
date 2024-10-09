@@ -16,6 +16,12 @@ public class Main {
             machine = new Turing(fileName);
             outputs = machine.run(true);
             System.out.println(outputs);
+
+            if (!outputs.isEmpty()) {
+                String specificOutput = outputs.getLast().tapes[machine.getTapesNumber()- 1];
+                System.out.println("Final Output is: " + specificOutput);
+            }
+
             System.out.println("The turing machine has " + machine.getTapesNumber() + " tapes");
             System.out.println("Time Complexity: " + machine.getStepCount());
             System.out.println("Space Complexity: " + machine.getTotalWrittenCells());

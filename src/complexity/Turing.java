@@ -231,7 +231,7 @@ public class Turing {
         }
         return totalWrittenCells;
     }
-    
+
     private static String encodeCurrentConfiguration(String s) {
         String ret = "(";
         char[] c = s.toCharArray();
