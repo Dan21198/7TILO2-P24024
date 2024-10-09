@@ -16,14 +16,6 @@ import java.util.Set;
 
 public class Turing {
 
-    public int getStepCount() {
-        return stepCount;
-    }
-
-    public int getMaxTapeLength() {
-        return maxTapeLength;
-    }
-
     /**
      * Output class is used to handle the (potentially) multiple outputs of the Turing machine.
      * Each Output object contains:
@@ -76,7 +68,14 @@ public class Turing {
     private final int tapesNumber;
     private final Map<String, Map<String, Map<String,List<String>>>> relations = new HashMap<>();
     private int stepCount = 0;
-    private int maxTapeLength = 0;
+    private Set<Integer>[] writtenCells;
+
+    public void initializeWrittenCells(int tapesNumber) {
+        writtenCells = new HashSet[tapesNumber];
+        for (int i = 0; i < tapesNumber; i++) {
+            writtenCells[i] = new HashSet<>();  // Initialize a set for each tape
+        }
+    }
 
     /**
      * Creates a new Turing machine which implements the program specified by the content of the file <i>filePath</i>
@@ -140,6 +139,7 @@ public class Turing {
         if(tapesNum < 1)
             throw new TuringException("Every Turing machine must have at least 1 tape");
         this.tapesNumber = tapesNum;
+        initializeWrittenCells(tapesNumber);
     }
 
     /**
@@ -219,6 +219,18 @@ public class Turing {
         }
         return ret.substring(0, ret.length()-1);
     }
+
+    public int getStepCount() {
+        return stepCount;
+    }
+
+    public int getTotalWrittenCells() {
+        int totalWrittenCells = 0;
+        for (Set<Integer> tapeSet : writtenCells) {
+            totalWrittenCells += tapeSet.size();
+        }
+        return totalWrittenCells;
+    }
     
     private static String encodeCurrentConfiguration(String s) {
         String ret = "(";
@@ -267,18 +279,18 @@ public class Turing {
      * @return a list of all the outputs of the simulation (if <i>optimize</i> is true then the list will contains only the executed branches outputs)
      * @throws TuringException
      */
-    
+
     public List<Output> run(String input, boolean optimize) throws TuringException {
         String[] tapes = new String[tapesNumber];
         int[] heads = new int[tapesNumber];
-        for(int i=0; i<tapes.length; i++) {
-            tapes[i] = initialSymbol + "_" + (i==0 ? input : "");
+        for (int i = 0; i < tapes.length; i++) {
+            tapes[i] = initialSymbol + "_" + (i == 0 ? input : "");
             heads[i] = 0;
         }
         List<Output> output;
         Set<Bulk> set;
-        run(tapes, heads, initialState, (output=new ArrayList<>()), optimize ? (set=new HashSet<>()) : (set=null));
-        if(set != null)
+        run(tapes, heads, initialState, (output = new ArrayList<>()), optimize ? (set = new HashSet<>()) : (set = null));
+        if (set != null)
             set.clear();
         return output;
     }
@@ -289,13 +301,6 @@ public class Turing {
             if (yetExecuted.contains((b = new Bulk(state, tapes, heads))))
                 return;
             yetExecuted.add(b);
-        }
-
-        // Update space complexity (maxTapeLength)
-        for (String tape : tapes) {
-            if (tape.length() > maxTapeLength) {
-                maxTapeLength = tape.length();
-            }
         }
 
         FINAL_STATE retState = null;
@@ -309,6 +314,7 @@ public class Turing {
             output.add(new Output(retState, tapes, heads));
             return;
         }
+
         Map<String, Map<String, List<String>>> config;
         Map<String, List<String>> go;
         if ((config = relations.get(state)) == null)
@@ -324,6 +330,7 @@ public class Turing {
             conf.append(c);
         if ((go = config.get(conf.toString())) == null)
             throw new TuringException("It is not defined what to do from state " + state + " with configuration " + encodeCurrentConfiguration(conf.toString()));
+
         for (String newState : go.keySet()) {
             Iterator<String> it = go.get(newState).iterator();
             while (it.hasNext()) {
@@ -335,6 +342,10 @@ public class Turing {
                 char[] tmp = newConfig.toCharArray();
                 for (int m = 0, j = 0; j < tmp.length; j += 2, m++) {
                     char dir = tmp[j + 1];
+
+                    // Track written cells for each tape
+                    writtenCells[m].add(newHeads[m]);  // Add the position of the head to the corresponding tape's written cells set
+
                     newTapes[m] = newTapes[m].substring(0, newHeads[m]) + tmp[j] + newTapes[m].substring(newHeads[m] + 1);
                     if (dir == rightDirection)
                         newHeads[m]++;
@@ -347,12 +358,6 @@ public class Turing {
                 }
 
                 stepCount++;
-
-                for (String tape : newTapes) {
-                    if (tape.length() > maxTapeLength) {
-                        maxTapeLength = tape.length();
-                    }
-                }
 
                 run(newTapes, newHeads, newState, output, yetExecuted);
             }

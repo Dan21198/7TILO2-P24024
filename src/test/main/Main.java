@@ -17,8 +17,8 @@ public class Main {
             outputs = machine.run(true);
             System.out.println(outputs);
             System.out.println("The turing machine has " + machine.getTapesNumber() + " tapes");
-            System.out.println("Time Complexity (Number of Steps): " + machine.getStepCount());
-            System.out.println("Space Complexity (Maximum Tape Length): " + machine.getMaxTapeLength());
+            System.out.println("Time Complexity: " + machine.getStepCount());
+            System.out.println("Space Complexity: " + machine.getTotalWrittenCells());
         } catch(IOException | TuringException e) {
             System.out.println(e);
         }
