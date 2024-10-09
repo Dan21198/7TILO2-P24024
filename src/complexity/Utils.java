@@ -2,13 +2,6 @@ package complexity;
 
 import java.util.List;
 
-/**
- * A class which could contain some useful methods
- * 
- * @author Mirko Alicastro
- * @link https://github.com/mirkoalicastro/turing
- * @version 1.2
- */
 public class Utils {
 
     /**

@@ -14,14 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * A Non-Deterministic Multi-Tape Turing machine is like a Turing machine but it has several tapes and its set of rules may prescribe more than one action to be performed for any given situation
- * 
- * @author Mirko Alicastro
- * @link https://github.com/mirkoalicastro/turing
- * @version 1.2
- */
-
 public class Turing {
 
     /**

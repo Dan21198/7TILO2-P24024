@@ -6,13 +6,6 @@ import complexity.Turing;
 import complexity.Turing.TuringException;
 import complexity.Utils;
 
-/**
- * A simple example
- * 
- * @author Mirko Alicastro
- * @link https://github.com/mirkoalicastro/turing
- */
-
 public class Main {
     public static void main(String[] args) throws Exception {
         String fileName = "src//complexity//homeWork02";
