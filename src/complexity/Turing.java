@@ -16,6 +16,14 @@ import java.util.Set;
 
 public class Turing {
 
+    public int getStepCount() {
+        return stepCount;
+    }
+
+    public int getMaxTapeLength() {
+        return maxTapeLength;
+    }
+
     /**
      * Output class is used to handle the (potentially) multiple outputs of the Turing machine.
      * Each Output object contains:
@@ -67,6 +75,8 @@ public class Turing {
     private final String input;
     private final int tapesNumber;
     private final Map<String, Map<String, Map<String,List<String>>>> relations = new HashMap<>();
+    private int stepCount = 0;
+    private int maxTapeLength = 0;
 
     /**
      * Creates a new Turing machine which implements the program specified by the content of the file <i>filePath</i>
@@ -272,61 +282,78 @@ public class Turing {
             set.clear();
         return output;
     }
-    
+
     private void run(String[] tapes, int[] heads, String state, List<Output> output, Set<Bulk> yetExecuted) throws TuringException {
-        if(yetExecuted != null) {
+        if (yetExecuted != null) {
             Bulk b;
-            if(yetExecuted.contains((b=new Bulk(state, tapes, heads))))
+            if (yetExecuted.contains((b = new Bulk(state, tapes, heads))))
                 return;
             yetExecuted.add(b);
         }
+
+        // Update space complexity (maxTapeLength)
+        for (String tape : tapes) {
+            if (tape.length() > maxTapeLength) {
+                maxTapeLength = tape.length();
+            }
+        }
+
         FINAL_STATE retState = null;
-        if(state.equals(FINAL_STATE.YES.toString()))
+        if (state.equals(FINAL_STATE.YES.toString()))
             retState = FINAL_STATE.YES;
-        else if(state.equals(FINAL_STATE.NO.toString()))
+        else if (state.equals(FINAL_STATE.NO.toString()))
             retState = FINAL_STATE.NO;
-        else if(state.equals(FINAL_STATE.HALT.toString()))
+        else if (state.equals(FINAL_STATE.HALT.toString()))
             retState = FINAL_STATE.HALT;
-        if(retState != null) {
+        if (retState != null) {
             output.add(new Output(retState, tapes, heads));
             return;
         }
         Map<String, Map<String, List<String>>> config;
         Map<String, List<String>> go;
-        if((config=relations.get(state)) == null)
+        if ((config = relations.get(state)) == null)
             throw new TuringException("Cannot find state " + state);
         char[] curr = new char[tapes.length];
-        String conf = "";
-        for(int i=0; i<tapes.length; i++) {
-            if(tapes[i].length() <= heads[i])
+        StringBuilder conf = new StringBuilder();
+        for (int i = 0; i < tapes.length; i++) {
+            if (tapes[i].length() <= heads[i])
                 tapes[i] += blankSymbol;
             curr[i] = tapes[i].charAt(heads[i]);
         }
-        for(char c: curr)
-            conf += c;
-        if((go=config.get(conf)) == null)
-            throw new TuringException("It is not defined what to do from state " + state + " with configuration " + encodeCurrentConfiguration(conf));
-        for(String newState: go.keySet()) {
+        for (char c : curr)
+            conf.append(c);
+        if ((go = config.get(conf.toString())) == null)
+            throw new TuringException("It is not defined what to do from state " + state + " with configuration " + encodeCurrentConfiguration(conf.toString()));
+        for (String newState : go.keySet()) {
             Iterator<String> it = go.get(newState).iterator();
-            while(it.hasNext()) {
+            while (it.hasNext()) {
                 String newConfig = it.next();
                 String[] newTapes = new String[tapesNumber];
                 System.arraycopy(tapes, 0, newTapes, 0, tapesNumber);
                 int[] newHeads = new int[tapesNumber];
                 System.arraycopy(heads, 0, newHeads, 0, tapesNumber);
                 char[] tmp = newConfig.toCharArray();
-                for(int m=0, j=0; j<tmp.length; j+=2, m++) {
-                    char dir = tmp[j+1];
-                    newTapes[m] = newTapes[m].substring(0,newHeads[m])+tmp[j]+newTapes[m].substring(newHeads[m]+1);
-                    if(dir == rightDirection)
+                for (int m = 0, j = 0; j < tmp.length; j += 2, m++) {
+                    char dir = tmp[j + 1];
+                    newTapes[m] = newTapes[m].substring(0, newHeads[m]) + tmp[j] + newTapes[m].substring(newHeads[m] + 1);
+                    if (dir == rightDirection)
                         newHeads[m]++;
-                    else if(dir == leftDirection) {
-                        if(newHeads[m] == 0)
+                    else if (dir == leftDirection) {
+                        if (newHeads[m] == 0)
                             throw new TuringException("Cannot go before the universe!");
                         newHeads[m]--;
-                    } else if(dir != stopDirection)
+                    } else if (dir != stopDirection)
                         throw new TuringException("Cannot understand the following direction: " + dir);
                 }
+
+                stepCount++;
+
+                for (String tape : newTapes) {
+                    if (tape.length() > maxTapeLength) {
+                        maxTapeLength = tape.length();
+                    }
+                }
+
                 run(newTapes, newHeads, newState, output, yetExecuted);
             }
         }

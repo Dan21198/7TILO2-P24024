@@ -11,11 +11,14 @@ public class Main {
         String fileName = "src//complexity//homeWork02";
         Turing machine;
         List<Turing.Output> outputs;
+
         try {
             machine = new Turing(fileName);
             outputs = machine.run(true);
             System.out.println(outputs);
             System.out.println("The turing machine has " + machine.getTapesNumber() + " tapes");
+            System.out.println("Time Complexity (Number of Steps): " + machine.getStepCount());
+            System.out.println("Space Complexity (Maximum Tape Length): " + machine.getMaxTapeLength());
         } catch(IOException | TuringException e) {
             System.out.println(e);
         }
